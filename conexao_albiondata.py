@@ -1,22 +1,18 @@
 import requests
 import json
-
+from regras_negocio import CIDADES, TIERS
 BANCO_DADOS = "dados.json"
 
-global cidades
-global tiers
 global precos
-#   "Lymhurst", "Martlock", "Thetford"
-tiers = [2, 3, 4, 5, 6, 7, 8]
-encantos = ['@1', '@2', '@3']
-cidades = ["Bridgewatch", "Caerleon", "Fort Sterling"]
 precos = {}
+
 
 def abrir_banco_dados():
     global base
     with open(BANCO_DADOS, 'r') as json_file:
         base = json.load(json_file)
     return base
+
 
 def salvar_banco_dados():
     for cidade in base:  # Para tudo na base antiga
@@ -33,8 +29,7 @@ def salvar_banco_dados():
 if __name__ == '__main__':
     base = abrir_banco_dados()
 
-
-    for cidade in cidades:
+    for cidade in CIDADES:
         precos[cidade] = dict()
 
     def coleta_valor_item_manual(item, tier, cidade):
@@ -54,7 +49,7 @@ if __name__ == '__main__':
 
     def busca_preco(item,cidade):
         preco_item = {}
-        for i in tiers:
+        for i in TIERS:
             res = requests.get('https://www.albion-online-data.com/api/v2/stats/Prices/t{}_{}.json?locations={}'.format(i, item, cidade))
             aux = res.json().pop()
             if res.status_code==200:
@@ -64,7 +59,7 @@ if __name__ == '__main__':
                 if preco_item[tier] == 0:
                     try:  # caso seja a primeira vez que esteja incluindo o item no json vai dar erro no base[cidade][!!!erro aqui!!!][str(i)] (acesso direto a uma area nao existente)
                         if base[cidade][item][str(tier)] < 1:  # caso o preco esteja inexistente na base de dados ja existente!
-                            preco_item[tier] = coleta_valor_item_manual(preco_item, item, tier, cidade)
+                            preco_item[tier] = coleta_valor_item_manual(item, tier, cidade)
                         else:  # Se não estiver inexistente e nao acho o preco recente usa o preco anterior da base de dados antiga
                             preco_item[tier] = base[cidade][item][str(tier)]
                     except:  # Se for a primeira inclusao desse item no json
@@ -75,11 +70,11 @@ if __name__ == '__main__':
 
     def busca_todos_precos(item):
         try:
-            for cidade in cidades:
+            for cidade in CIDADES:
                 for i in item:
                     busca_preco(i, cidade)
         except:
-            for cidade in cidades:
+            for cidade in CIDADES:
                 busca_preco(item, cidade)
 
 
